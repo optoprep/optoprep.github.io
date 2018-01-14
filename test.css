@@ -1,0 +1,28 @@
+.navbar.navbar-inverse.navbar-fixed-top {
+	display: none;
+	height: 0;
+}
+
+#footer {
+	display: none;
+}
+
+#bottom {
+	display: none;
+}
+
+#wrapper-home {
+	margin-top: 0px;
+}
+
+body {
+	background: #FFF;
+}
+
+div#wrapper {
+	margin-top: 20px;
+}
+
+#page-title {
+	display: none;
+}

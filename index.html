@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>OptoPrep</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+    <script src="https://use.fontawesome.com/365c4217b2.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+
+  </head>
+  <body>
+    <nav class="navbar fixed-top navbar-dark" style="background-color: #2980b9; text-align: center; padding: 8px 0">
+      <div class="" href="#" style="margin: 0 auto">
+        <i id="prev-button" class="fa fa-arrow-circle-left" aria-hidden="true" style="font-size: 60px; margin: 0 30px; color: #FFF; vertical-align: middle; cursor: pointer;"></i>
+
+        <input id="question-input" type="number" size="3" style="border-color: #FFF; border-width: 0; width: 80px; text-align: center; font-size: 20px" placeholder="Q #"><input type="button" id="go-button" value="Go" style="font-size: 20px; background-color: #87D37C; border-color: #87D37C; cursor: pointer; border-width: 0">
+
+        <i id="next-button" class="fa fa-arrow-circle-right" aria-hidden="true" style="font-size: 60px; margin: 0 30px; color: #FFF; vertical-align: middle; cursor: pointer;"></i>
+
+      </div>
+
+    </nav>
+
+    <div style="text-align: center; margin-top: 80px">
+      <image id="q-image" src="screenshots/1.png">
+    </div>
+
+    <script>
+
+      var currentQ = parseInt(getURLParameter('q'));
+
+      function getURLParameter(sParam) {
+          var sPageURL = window.location.search.substring(1);
+          var sURLVariables = sPageURL.split('&');
+          for (var i = 0; i < sURLVariables.length; i++) 
+          {
+              var sParameterName = sURLVariables[i].split('=');
+              if (sParameterName[0] == sParam) 
+              {
+                  return sParameterName[1];
+              }
+          }
+      }
+
+      $('#question-input').focus(function() {
+        $('#question-input').val('');
+      });
+
+      $('#go-button').click(function() {
+        var target_q = $('#question-input').val();
+        redirectQ(target_q);
+      });
+
+      function redirectQ(target_q) {
+        window.location.href = window.location.pathname + "?q=" + target_q;
+      }
+
+      function gotoQuestion(q) {
+        $('#question-input').val(q);
+        $('#q-image').attr('src', 'screenshots/' + q + '.png');
+      }
+
+      $('#prev-button').click(function() {
+        if (currentQ > 1) {
+          redirectQ(currentQ-1);
+        }
+      });
+
+      $('#next-button').click(function() {
+        console.log(currentQ);
+        redirectQ(currentQ+1);
+      });
+
+      if (currentQ > 0) {
+        gotoQuestion(currentQ);
+      } else {
+        gotoQuestion(1);
+        currentQ = 1;
+      }
+
+    </script>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+  </body>
+</html>
