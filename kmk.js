@@ -1,10 +1,12 @@
 const puppeteer = require('puppeteer');
+var sha256 = require('js-sha256');
 
 async function run() {
   const browser = await puppeteer.launch({
   	headless: true
   });
   const page = await browser.newPage();
+  await page.setViewport({width: 1024, height: 800});
 
   const USERNAME_SELECTOR = '#user_email';
   const PASSWORD_SELECTOR = '#user_password';
@@ -64,31 +66,75 @@ async function run() {
     databaseURL: "https://kmk-opto.firebaseio.com"
   });
   var db = admin.database();
-  var ref = db.ref("flashcards/ocular_anatomy");
+  var ref = db.ref("flashcards");
 
   try {
 
     var i = 1;
     while (true) {
       const q = await page.evaluate(() => document.querySelector( '#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12 > div.card-flipper > div.front > div.body > div').textContent);
-      console.log('Question ' + i + ': '+ q.trim());
+      var hash = sha256(q.trim());
+      console.log('\n=====\nQ + ' +i + ', Hash: ' + hash);
+      //console.log('Question ' + i + ':\n'+ q.trim());
 
+      // await delay(200);
       const ANSWER_BUTTON = '#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12 > div.card-flipper > div.front > div.footer > span.answer-icon > img';
       await page.click(ANSWER_BUTTON);
 
       const a = await page.evaluate(() => document.querySelector('#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12.answer > div.card-flipper > div.back > div.body > div').textContent);
-      console.log('Answer: ' + a.trim() + '\n');
+      //console.log('Answer:\n' + a.trim());
+
+      try {
+        const INFO_BUTTON = '#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12 > div.card-flipper > div.front > div.footer > span.info-icon > i';
+        page.click(INFO_BUTTON);
+
+        const summary = await page.evaluate(() => document.querySelector('#flashcard-view > div.flashcard > div.overlay > div.overlay-content > div.body > p').textContent);
+        //console.log('Summary:\n' + summary.trim() + '\n');
+      } catch (ex) {
+        //console.log("No summary\n");
+      }
 
       const NEXT_BUTTON = '#flashcard-view > div.flashcard > div.flashcard-container > div.nav.col-xs-12.col-md-10.col-lg-3 > div > div > input.next.button.btn';
-      await page.click(NEXT_BUTTON);
+      //await page.click(NEXT_BUTTON);
       //await page.click(TOGGLE_ADVANCED);
+      //await page.waitForNavigation({waituntil:'networkidle2'});
 
-      await delay(500);
+      const [response] = await Promise.all([
+        page.waitForNavigation(),
+        page.click(NEXT_BUTTON),
+      ]);
 
-      ref.child(i).set({
-        question: q.trim(),
-        answer: a.trim()
+      await ref.child(hash).once('value').then(function(card) {
+        if (card.val() === null) {
+          console.log("NEW CARD");
+          ref.child(hash).set({
+            index: i,
+            question: q.trim(),
+            answer: a.trim()
+          });
+        } else {
+          console.log("EXISTING CARD FOUND: " + card.key + ", " + card.val().index + ', ' + card.val().question);
+        }
       });
+
+      //await delay(500);
+      /*
+      var all_cards = null;
+      ref.on("value", function(cards) {
+        all_cards = cards;
+        //console.log("\n\n\n\n======\n\n" + JSON.stringify(cards) + ", count: "); //+ JSON.stringify(cards));
+        console.log('Got all cards, hash ' + hash + ", " + cards);
+        console.log('Card found: ' + cards['8bc72dddd1a5be129302b81d4e850c5b8f3c3990a651a4c213c12922ce9b198a']);
+        console.log('Card found: ' + cards['32423432']);
+      }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+      });
+      */
+  
+
+      /**
+
+      **/
       i = i+1;
 
     }
