@@ -3,7 +3,7 @@ var sha256 = require('js-sha256');
 
 async function run() {
   const browser = await puppeteer.launch({
-  	headless: true
+  	headless: false
   });
   const page = await browser.newPage();
   await page.setViewport({width: 1024, height: 800});
@@ -41,8 +41,9 @@ async function run() {
   const OCULAR_ANATOMY = '#view > div > div:nth-child(2) > div > div:nth-child(1) > div.button.btn > a';
 
   const OCULAR_ANATOMY_LINK = 'https://app.optometryboardsreview.com/flashcards/1afa6cc7-cb8d-4966-8e58-8dc03609ca66?include_advanced%3F=false'
+  const OCULAR_PHYS_LINK = 'https://app.optometryboardsreview.com/flashcards/7af2de75-4ccc-450d-9eb5-7963e249d88c?include_advanced%3F=true';
 
-  await page.goto(OCULAR_ANATOMY_LINK);
+  await page.goto(OCULAR_PHYS_LINK);
 
   const TOGGLE_ADVANCED = '#flashcard_params > div:nth-child(5) > label';
   const TOGGLE_ALL = '#flashcard_params > div:nth-child(6) > label';
@@ -66,7 +67,26 @@ async function run() {
     databaseURL: "https://kmk-opto.firebaseio.com"
   });
   var db = admin.database();
-  var ref = db.ref("flashcards");
+  var ref = db.ref("fcards");
+
+  var old_cards = null;
+
+  ref.on("value", function(cards) {
+    //console.log(cards.val());
+    old_cards = cards.val();
+    //for (var i in cards.val()) {
+      //console.log(i);
+      //console.log(cards.val()[i]);
+    //}
+    if (old_cards != null) {
+      console.log("Existing cards length: " + Object.keys(old_cards).length);
+    }
+  }, function (errorObject) {
+    console.log("The read failed: " + errorObject.code);
+  });
+
+  console.log("Waiting for 5s...");
+  await delay(5000);
 
   try {
 
@@ -76,46 +96,73 @@ async function run() {
       var hash = sha256(q.trim());
       console.log('\n=====\nQ + ' +i + ', Hash: ' + hash);
       //console.log('Question ' + i + ':\n'+ q.trim());
+      existing_card = null;
+      if (old_cards != null) {
+        existing_card = old_cards[hash];
+      }
+      if (existing_card != null) {
+        console.log("EXISTING CARD: " + existing_card.index);
+        
+        /*
+        var count = existing_card.count;
+        console.log("INDEX: " + existing_card.index);
+        if (count == null) {
+          count = 1;
+        } else {
+          count = parseInt(existing_card.count) + 1;
+        }
+        */
 
-      // await delay(200);
-      const ANSWER_BUTTON = '#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12 > div.card-flipper > div.front > div.footer > span.answer-icon > img';
-      await page.click(ANSWER_BUTTON);
+      } else {
+        console.log("\n===== NEW CARD ===== \n");
 
-      const a = await page.evaluate(() => document.querySelector('#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12.answer > div.card-flipper > div.back > div.body > div').textContent);
-      //console.log('Answer:\n' + a.trim());
+        const ANSWER_BUTTON = '#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12 > div.card-flipper > div.front > div.footer > span.answer-icon > img';
+        await page.click(ANSWER_BUTTON);
 
-      try {
-        const INFO_BUTTON = '#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12 > div.card-flipper > div.front > div.footer > span.info-icon > i';
-        page.click(INFO_BUTTON);
+        const a = await page.evaluate(() => document.querySelector('#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12.answer > div.card-flipper > div.back > div.body > div').textContent);
+        //console.log('Answer:\n' + a.trim());
 
-        const summary = await page.evaluate(() => document.querySelector('#flashcard-view > div.flashcard > div.overlay > div.overlay-content > div.body > p').textContent);
-        //console.log('Summary:\n' + summary.trim() + '\n');
-      } catch (ex) {
-        //console.log("No summary\n");
+        var summary = "";
+        try {
+          const INFO_BUTTON = '#flashcard-view > div.flashcard > div.flashcard-container > div.card.col-xs-12 > div.card-flipper > div.front > div.footer > span.info-icon > i';
+          page.click(INFO_BUTTON);
+
+          summary = await page.evaluate(() => document.querySelector('#flashcard-view > div.flashcard > div.overlay > div.overlay-content > div.body > p').textContent);
+          //console.log('Summary:\n' + summary.trim() + '\n');
+        } catch (ex) {
+          //console.log("No summary\n");
+        }
+
+        ref.child(hash).set({
+            index: i,
+            question: q.trim(),
+            answer: a.trim(),
+            summary: summary.trim()
+          });
+
       }
 
       const NEXT_BUTTON = '#flashcard-view > div.flashcard > div.flashcard-container > div.nav.col-xs-12.col-md-10.col-lg-3 > div > div > input.next.button.btn';
-      //await page.click(NEXT_BUTTON);
-      //await page.click(TOGGLE_ADVANCED);
-      //await page.waitForNavigation({waituntil:'networkidle2'});
-
       const [response] = await Promise.all([
         page.waitForNavigation(),
         page.click(NEXT_BUTTON),
       ]);
 
+      /*
       await ref.child(hash).once('value').then(function(card) {
         if (card.val() === null) {
           console.log("NEW CARD");
           ref.child(hash).set({
             index: i,
             question: q.trim(),
-            answer: a.trim()
+            answer: a.trim(),
+            summary: summary.trim()
           });
         } else {
           console.log("EXISTING CARD FOUND: " + card.key + ", " + card.val().index + ', ' + card.val().question);
         }
       });
+      */
 
       //await delay(500);
       /*
@@ -136,6 +183,7 @@ async function run() {
 
       **/
       i = i+1;
+      await delay(1000);
 
     }
 

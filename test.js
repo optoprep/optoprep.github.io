@@ -33,10 +33,11 @@ async function run() {
   await page.addStyleTag({path: 'test.css'});
   await page.waitFor(500);
 
-  for (i=1; i<=912; i++) {
+  for (i=1; i<=2089; i++) {
   	  await page.screenshot({ path: 'screenshots/' + i + '.png', fullPage: true });
   	  await page.click(NEXT_BUTTON_SELECTOR);
-  	  await page.waitFor(500);
+      //await page.waitForNavigation({waitUntil: 'networkidle2'});
+  	  await page.waitFor(200);
   	  console.log("Processing page " + i);
   }
 
