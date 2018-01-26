@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link href="https://fonts.googleapis.com/css?family=EB+Garamond" rel="stylesheet">
+
+    <title>KMK</title>
+
+    <script src="https://www.gstatic.com/firebasejs/4.9.0/firebase.js"></script>
+
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.min.js"
+      integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+      crossorigin="anonymous"></script>
+
+    <style>
+      .section {
+        margin: 20px 0px;
+        border: 1px solid #EFEFEF;
+        padding: 20px 30px;
+        font-family: 'EB Garamond', serif;
+        font-size: 18px;
+      }
+      .q-title {
+        font-size: 14px;
+        margin: 5px 0 5px 0;
+        color: #2980b9;
+      }
+      .a-section {
+        font-weight: normal;
+      }
+
+    </style>
+      
+  </head>
+  <body style="margin: 40px 100px; font-family: 'EB Garamond', serif;">
+    
+    <div class="section" id="c1" style="font-family: 'EB Garamond', serif;">
+      <div class="q-title">
+        Question <span id="q-ind">:
+      </div>
+      <div id="q">
+      </div>
+      <div class="q-title">
+        Answer:
+      </div>
+      <div id="a" class="a-section">
+      </div>
+      <div class="q-title">
+        Explanation:
+      </div>
+      <div id="e" class="e-section">
+      </div>
+    </div>
+
+    <div class="section" id="c2" style="font-family: 'EB Garamond', serif;">
+      <div class="q-title">
+        Question <span id="q-ind">:
+      </div>
+      <div id="q">
+      </div>
+      <div class="q-title">
+        Answer:
+      </div>
+      <div id="a" class="a-section">
+      </div>
+      <div class="q-title">
+        Explanation:
+      </div>
+      <div id="e" class="e-section">
+      </div>
+    </div>
+
+    <div class="section" id="c3" style="font-family: 'EB Garamond', serif;">
+      <div class="q-title">
+        Question <span id="q-ind">:
+      </div>
+      <div id="q">
+      </div>
+      <div class="q-title">
+        Answer:
+      </div>
+      <div id="a" class="a-section">
+      </div>
+      <div class="q-title">
+        Explanation:
+      </div>
+      <div id="e" class="e-section">
+      </div>
+    </div>
+
+    <div class="section" id="c4" style="font-family: 'EB Garamond', serif;">
+      <div class="q-title">
+        Question <span id="q-ind">:
+      </div>
+      <div id="q">
+      </div>
+      <div class="q-title">
+        Answer:
+      </div>
+      <div id="a" class="a-section">
+      </div>
+      <div class="q-title">
+        Explanation:
+      </div>
+      <div id="e" class="e-section">
+      </div>
+    </div>
+
+
+    <div id="footer" style="text-align: center; margin-top: 40px">
+
+    </div>
+    
+    <script>
+
+      var page_number = parseInt(getURLParameter('p'));
+      $('#footer').text(page_number);
+
+      function getURLParameter(sParam) {
+          var sPageURL = window.location.search.substring(1);
+          var sURLVariables = sPageURL.split('&');
+          for (var i = 0; i < sURLVariables.length; i++) 
+          {
+              var sParameterName = sURLVariables[i].split('=');
+              if (sParameterName[0] == sParam) 
+              {
+                  return sParameterName[1];
+              }
+          }
+      }
+
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyDzBKzhjuGrK7wLGfovOnKJvLb0neZPscc",
+        authDomain: "kmk-opto.firebaseapp.com",
+        databaseURL: "https://kmk-opto.firebaseio.com",
+        projectId: "kmk-opto",
+        storageBucket: "kmk-opto.appspot.com",
+        messagingSenderId: "322126864341"
+      };
+      firebase.initializeApp(config);
+      var database = firebase.database();
+      var ref = database.ref('fcards');
+
+      var indexed_cards = [];
+
+      ref.on("value", function(cards) {
+        var i = 1;
+        for (var h in cards.val()) {
+          indexed_cards[i] = cards.val()[h];
+          console.log('Card ' + i + ': ' + indexed_cards[i]);
+          i = i + 1;
+        }
+
+        var start_ind = (page_number-1) * 3 + 1;
+        var pos = 1;
+        for (var p = start_ind; p<=(start_ind+3); p++) {
+          $('#c'+pos +' #q').text(indexed_cards[p].question);
+          $('#c'+pos +' #a').text(indexed_cards[p].answer);
+          $('#c'+pos +' #e').text(indexed_cards[p].summary);
+          $('#c'+pos +' #q-ind').text(p + ":");
+          pos++;
+
+        }
+        
+
+      }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+      });
+
+    </script>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  </body>
+</html>
