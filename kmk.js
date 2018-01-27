@@ -131,7 +131,7 @@ async function run() {
     try {
 
       var i = 1;
-      var stop = true;
+      var stop = false;
       var existing_count = 0;
       while (!stop) {
 
